@@ -3,6 +3,7 @@ import sys
 import base64
 import shutil
 
+
 def main():
     if len(sys.argv) < 2:
         sys.exit()
@@ -28,6 +29,7 @@ def main():
         shutil.copyfileobj(f_input, f_decoded)
 
     shutil.move(temp_decoded_file, input_file)
+
 
 if __name__ == "__main__":
     main()

@@ -1,87 +1,104 @@
-### English Description
+### English
 
-## SigmaBat
+## SigmaBat Reborn
 
-A simple converter that translates .exe files to .bat files.
+SigmaBat Reborn generates `.bat` launchers for managed .NET assemblies. The launcher starts PowerShell, loads the target assembly directly into memory, and invokes its entry point without writing the payload to disk.
 
-### Overview
+### Features
 
-SigmaBat is a handy tool developed by Abusa_DEV that allows you to convert .exe files into .bat files. This is achieved using a method that writes the base64-encoded .exe content to a temporary file via a batch script and then executes it. The converter is written in Python.
+- Converts a .NET assembly into a batch-based launcher
+- Uses `powershell.exe` for in-memory assembly loading
+- Supports automatic post-processing obfuscation
+- Optional `--no-obf` flag for a plain launcher output
 
 ### Usage
 
-To use SigmaBat, simply run the following command in your terminal:
-
-```
-SigmaBat.py <input exe> <output bat>
+```text
+python SigmaBat.py <input assembly> <output bat> [--no-obf]
 ```
 
-This will generate a .bat file from the provided .exe file.
+Examples:
 
-### How It Works
+```text
+python SigmaBat.py payload.exe output.bat
+python SigmaBat.py payload.exe output.bat --no-obf
+```
 
-1. The exe file the is being encoded into encrypted variables
-2. A bat file is being created. It uses JavaScript to decode their contents back into a temporary .exe file
-3. The bat file launches a temporary .exe file
+### Workflow
 
-### Development and Credits
+1. Read the input assembly bytes from disk.
+2. Base64-encode the payload and embed it in the launcher.
+3. Generate a batch file that starts PowerShell with an encoded command.
+4. Load the assembly in memory and invoke the entry point.
+5. Optionally obfuscate the resulting batch file for presentation.
 
-- Developed by: [Abusa_DEV](https://t.me/Abusa_DEV)
-- Execution method credit: [@Guest_account001](https://t.me/Guest_account001)
+### Requirements
+
+- Windows
+- Python 3
+- PowerShell
+- A managed .NET assembly with a valid entry point
+
+### Notes
+
+- The default output includes the obfuscation step.
+- Use `--no-obf` if you want to inspect the generated batch file directly.
+- The launcher is intended for managed assemblies, not native executables.
 
 ### License
 
-SigmaBat is distributed under the GPL license. You are free to:
-- Use the software for any purpose.
-- Study how the program works and adapt it to your needs.
-- Redistribute copies so you can help others.
-- Improve the program and release your improvements to the public.
+SigmaBat Reborn is distributed under the GPL license.
 
 ### Disclaimer
 
-The responsibility for the use of this tool lies with the user. SigmaBat is provided as an example of conversion techniques.
+This project is provided for educational and research purposes. Use it only on software and systems you are authorized to test.
 
 ---
 
-### Русское описание
+### Русский
 
-## SigmaBat
+## SigmaBat Reborn
 
-Простой конвертер, который переводит файлы .exe в .bat.
+SigmaBat Reborn создаёт лоадеры для управляемых .NET-сборок. Такой батник запускает PowerShell, загружает целевую сборку в память и вызывает точку входа без работы с диском.
 
-### Обзор
+### Возможности
 
-SigmaBat – это простой инструмент, разработанный Abusa_DEV, который позволяет конвертировать файлы .exe в .bat. Это достигается с помощью метода, который записывает base64-кодированное содержимое .exe во временный файл через скрипт и запускает его. Конвертер написан на Python с использованием системных библиотек
+- Преобразует .NET-сборку в `.bat`-лоадер
+- Использует `powershell` для загрузки сборки в память
+- По умолчанию играется с кодировкой выходного файла. Флаг `--no-obf` позволяет получить файл без обфускации.
 
 ### Использование
 
-Для использования SigmaBat просто выполните следующую команду в терминале:
-
-```
-SigmaBat.py <input exe> <output bat>
+```text
+python SigmaBat.py <input assembly> <output bat> [--no-obf]
 ```
 
-Это создаст .bat файл из указанного .exe файла.
+Примеры:
 
-### Как это работает
+```text
+python SigmaBat.py payload.exe output.bat
+python SigmaBat.py payload.exe output.bat --no-obf
+```
 
-1. Файл .exe кодируется в переменные
-2. Создается .bat файл, который при помощи JavaScript декодирует их содержимое обратно во временный файл .exe
-3. Батник запускает временный файл .exe.
+### Принцип работы
 
-### Разработка и благодарности
+1. Входная сборка преобзазуется в Base64.
+2. Полезная нагрузка встраивается в лоадер.
+3. Генерируется файл, запускающий PowerShell с захардкоженной командой + нагрузкой.
+4. Сборка загружается в память, вызывается точка входа.
+5. Если не указано обратное, ломается кодировка выходного файла.
 
-- Разработано: [Abusa_DEV](https://t.me/Abusa_DEV)
-- За способ выполнения спасибо [@Guest_account001](https://t.me/Guest_account001)
+### Требования
+
+- Windows
+- Python 3
+- PowerShell
+- Управляемая .NET-сборка с корректной точкой входа
 
 ### Лицензия
 
-SigmaBat распространяется под лицензией GPL. Вы можете:
-- Использовать программное обеспечение для любых целей.
-- Изучать, как программа работает, и адаптировать её под свои нужды.
-- Распространять копии, чтобы помочь другим.
-- Улучшать программу и публиковать свои улучшения.
+SigmaBat Reborn распространяется под лицензией GPL.
 
-### Отказ от ответственности
+### Дисклеймер
 
-Ответственность за использование этого инструмента лежит на пользователе. SigmaBat предоставляется только как пример конвертационных техник.
+Проект предоставляется в образовательных и исследовательских целях. Используйте его только там, где у вас есть разрешение на тестирование.
