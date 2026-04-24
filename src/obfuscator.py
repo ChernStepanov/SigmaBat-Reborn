@@ -3,7 +3,6 @@ import sys
 import base64
 import shutil
 
-
 def main():
     if len(sys.argv) < 2:
         sys.exit()
@@ -18,18 +17,14 @@ def main():
         input("Press Enter to continue...")
         sys.exit()
 
-    temp_b64_data = "//4mY2xzDQo="
-    decoded_data = base64.b64decode(temp_b64_data)
-
     temp_decoded_file = f"{input_file}.tmp"
-    with open(temp_decoded_file, 'wb') as f:
-        f.write(decoded_data)
+    if os.path.exists(temp_decoded_file):
+        os.remove(temp_decoded_file)
 
-    with open(temp_decoded_file, 'ab') as f_decoded, open(input_file, 'rb') as f_input:
+    with open(temp_decoded_file, 'wb') as f_decoded, open(input_file, 'rb') as f_input:
         shutil.copyfileobj(f_input, f_decoded)
 
     shutil.move(temp_decoded_file, input_file)
-
 
 if __name__ == "__main__":
     main()
