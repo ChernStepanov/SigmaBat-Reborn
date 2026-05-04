@@ -17,7 +17,7 @@ SigmaBat Reborn generates `.bat` launchers for managed EXEs, DLLs, and shellcode
 - Performs symbol and entry point checks before generating the launcher
 - Keeps the optional batch obfuscation step
 - Supports `--no-obf` for plain launcher output
-- Prints short launcher status messages for shellcode execution
+- Prints short launcher status messages and exit codes
 
 ### Usage
 
@@ -49,19 +49,23 @@ Managed EXEs:
 - Loaded in memory with `System.Reflection.Assembly.Load()`
 - The launcher resolves `Assembly.EntryPoint`
 - Supported entry point signatures are parameterless methods and `string[]`-style methods
+- The launcher prints runtime status and final exit code
 
 Managed DLLs:
 - Loaded in memory with `System.Reflection.Assembly.Load()`
 - The launcher searches for a matching static method by name
 - Supported signatures are parameterless methods and `string[]`-style entry methods
+- The launcher prints runtime status and final exit code
 
 Native DLLs:
-- Written to a temporary file for loading
-- The launcher checks that the export exists with `GetProcAddress()`
+- Loaded in memory without temporary DLL files
+- The launcher checks that the export exists before generation
+- The runtime path maps the DLL image, resolves imports, applies relocations, and invokes the export
 - The current native path supports zero-argument exports
+- The launcher prints runtime status and final exit code
 
 Shellcode:
-- Loaded from a base64 blob staged in the launcher environment
+- Loaded from a base64 blob staged in the launcher itself
 - Allocated in executable memory and launched in a new thread
 - Prints short status messages to the console
 - Intended for shellcode byte payloads, not managed assemblies
@@ -71,7 +75,7 @@ Shellcode:
 1. Read the input bytes from disk.
 2. Detect whether the file is a managed EXE, a managed DLL, or a native DLL.
 3. Verify that the requested symbol or entry point exists before generating the launcher.
-4. Embed the bytes and symbol name into the generated launcher.
+4. Embed payload data and parameters into the generated launcher.
 5. Generate a `.bat` file that starts PowerShell.
 6. Invoke the payload at runtime.
 7. Optionally obfuscate the final batch file.
@@ -89,7 +93,7 @@ Shellcode:
 - `--no-obf` is useful when you want to inspect the generated batch file directly.
 - The obfuscation step is cosmetic, preserves the batch structure, and does not change the execution path.
 - No encoding games are required for normal use.
-- Shellcode launchers print short progress messages so you can see where execution starts and ends.
+- Launchers print short runtime progress messages and final exit code.
 
 ### License
 
@@ -105,7 +109,7 @@ This project is provided for educational and research purposes. Use it only on s
 
 ### SigmaBat Reborn
 
-SigmaBat Reborn создаёт лоадеры в `.bat` для управляемых сборок .NET, любого вида DLL и шеллкода, а затем передаёт выполнение в PowerShell. Для сборок последовательно происходят загрузка в память, поиск точки входа и переход к ней. Для DLL определяется, является ли файл управляемым или нативным, проверяется наличие указанной при сборке функции, затем она вызывается. Для шеллкода полезная нагрузка временно собирается в переменной окружения лоадера, помещается в исполняемую память и запускается в отдельном потоке.
+SigmaBat Reborn создаёт лоадеры в `.bat` для управляемых сборок .NET, любого вида DLL и машинного кода, а затем передаёт выполнение в PowerShell. Для сборок последовательно происходят загрузка в память, поиск точки входа и переход к ней. Для DLL определяется, является ли файл управляемым или нативным, проверяется наличие указанной функции, затем она вызывается. Для машинного кода полезная нагрузка собирается в самом лоадере, размещается в исполняемой памяти и запускается в отдельном потоке.
 
 ### Структура
 
@@ -115,14 +119,14 @@ SigmaBat Reborn создаёт лоадеры в `.bat` для управляе�
 ### Возможности
 
 - Поддерживает управляемые EXE
-- Поддерживает DLL
-- Поддерживает шеллкод
+- Поддерживает управляемые и нативные DLL
+- Поддерживает машинный код
 - Вызывает символ по имени для DLL
 - Вызывает точку входа для EXE
-- Проверяет наличие символа и entry point до генерации лоадера
+- Проверяет наличие символа и точки входа до генерации лоадера
 - Сохраняет необязательную обфускацию
 - Поддерживает `--no-obf` для вывода без обфускации
-- Выводит короткие статусные сообщения для шеллкода
+- Выводит короткие сообщения о ходе выполнения и итоговый код завершения
 
 ### Использование
 
@@ -146,7 +150,7 @@ python src/SigmaBat.py shellcode examples/shellcode.bin output.bat
 - `examples/example.exe` - пример управляемого EXE, который запускается через `Assembly.EntryPoint`
 - `examples/managed_example.dll` - управляемая DLL, которая экспортирует методы `Ping` и `Main`
 - `examples/native_example.dll` - нативная DLL, экспортирующая `Ping`
-- `examples/shellcode.bin` - минимальный шеллкод, который сразу завершает выполнение. Пример минимален из-за разницы адресов в разных версиях ОС.
+- `examples/shellcode.bin` - минимальный пример машинного кода, который сразу завершает выполнение
 
 ### Поведение во время работы
 
@@ -154,28 +158,32 @@ python src/SigmaBat.py shellcode examples/shellcode.bin output.bat
 - Загружается в память через `System.Reflection.Assembly.Load()`
 - Лоадер получает `Assembly.EntryPoint`
 - Поддерживаются точки входа без параметров и методы со `string[]`
+- Лоадер выводит сообщения о ходе выполнения и итоговый код завершения
 
 Управляемые DLL:
 - Загружается в память через `System.Reflection.Assembly.Load()`
 - Лоадер ищет подходящий статический метод по имени
 - Поддерживаются методы без параметров и методы со `string[]`
+- Лоадер выводит сообщения о ходе выполнения и итоговый код завершения
 
 Нативные DLL:
-- Загружается в память
-- Лоадер проверяет наличие экспорта через `GetProcAddress()`
-- Текущий способ загрузки нативных библиотек поддерживает экспорты без аргументов
+- Загружается в память без временных файлов DLL
+- Лоадер проверяет наличие экспорта до генерации
+- Во время выполнения образ DLL отображается в память, разрешаются импорты, применяются релокации и вызывается экспорт
+- Текущий способ поддерживает экспорты без аргументов
+- Лоадер выводит сообщения о ходе выполнения и итоговый код завершения
 
-Шеллкод:
-- Временно сохраняется в переменной окружения лоадера
-- Выделяется исполняемая память, стартует отдельный поток
+Машинный код:
+- Загружается из base64-блока, встроенного в лоадер
+- Выделяется исполняемая память, затем стартует отдельный поток
 - Выводит короткие статусные сообщения в консоль
 
 ### Принцип работы
 
 1. Считать байты входного файла с диска.
-2. Определить, является ли это упрввляемым EXE или DLL, нативной DLL или шеллкодом.
+2. Определить, является ли это управляемым EXE, управляемой DLL, нативной DLL или машинным кодом.
 3. Проверить наличие нужного символа или точки входа до генерации лоадера.
-4. Встроить байты и имя символа в генерируемый лоадер.
+4. Встроить полезную нагрузку и параметры в генерируемый лоадер.
 5. Сформировать `.bat`, обращающийся к PowerShell.
 6. Вызвать полезную нагрузку во время выполнения.
 7. Применить обфускацию, если не указано обратное.
@@ -191,8 +199,8 @@ python src/SigmaBat.py shellcode examples/shellcode.bin output.bat
 
 - Если функция или точка входа отсутствуют, генератор остановится до записи лоадера.
 - `--no-obf` удобно использовать, когда нужен читаемый `.bat`.
-- Обфускация реализована путём смены кодировки, носит косметический характер, сохраняет структуру батника и не меняет путь выполнения.
-- Загрузчик шеллкода выводит короткие сообщения о ходе запуска, чтобы было видно начало и завершение выполнения, а также полученный код.
+- Обфускация носит косметический характер, сохраняет структуру батника и не меняет путь выполнения.
+- Лоадеры выводят короткие сообщения о ходе запуска и итоговый код завершения.
 
 ### Лицензия
 
@@ -200,4 +208,4 @@ SigmaBat Reborn распространяется по лицензии GPL.
 
 ### Дисклеймер
 
-Проект предоставляется в образовательных и исследовательских целях. Используйте его только на тех системах и в тех средах, где у вас есть разрешение на тестирование. Идея репозитория заключается в демонстрации возможности расширения функционала служебных скриптов, придерживаясь концепции "диск - это лава". Автор не несёт ответственности за ваши действия.
+Проект предоставляется в образовательных и исследовательских целях. Используйте его только на тех системах и в тех средах, где у вас есть разрешение на тестирование. Идея репозитория заключается в демонстрации расширения функционала служебных скриптов, придерживаясь концепции "диск - это лава". Автор не несёт ответственности за ваши действия.
